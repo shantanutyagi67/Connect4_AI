@@ -31,12 +31,14 @@ public class GUI extends JFrame{
 	
 	static int spacing = 5;
 	static int width = 770, height = 770;
-	static int h = 3, w = 4;
+	static int h = 6, w = 7;
 	static int size = width/Math.max(h, w);
 	static int state[][] = new int [h][w];
 	public double mx,my;
-	int turn = 1, win =0;
+	int turn = 1, win =0, winI = -1, winJ = -1, cases = -1;
 	int connect = 4;
+	Toolkit t=Toolkit.getDefaultToolkit();
+	Image img;
 	
 	public GUI() {
 		this.setTitle("CONNECT 4");
@@ -57,7 +59,7 @@ public class GUI extends JFrame{
 			for(int j=0;j<w;j++)
 				state[i][j]= 0;
 	}		
-	public class Board extends JPanel{	
+	public class Board extends JPanel {	
 		/**
 		 * 
 		 */
@@ -71,15 +73,39 @@ public class GUI extends JFrame{
 	    	g2D.setRenderingHints(rh);
 			for(int i=0;i<h;i++) {
 				for(int j=0;j<w;j++) {
-					if (state[i][j]== 0)
+					int temp = state[i][j];
+					if (temp== 0)
 						g2D.setColor(Color.WHITE);
 					if(inBoxX()==j) 
 						g2D.setColor(Color.DARK_GRAY);
-					if (state[i][j]== 1)
+					if (temp == 1) {
 						g2D.setColor(Color.RED);
-					if (state[i][j]== 2)
+						if (win == 1) {
+							if ( (cases == 0 && (i==winI && j==winJ || j==winJ+1 || j==winJ+2 || j==winJ+3 )) || 
+								 (cases == 1 && (i==winI && j==winJ || i==winI+1 || i==winI+2 || i==winI+3 )) ||
+								 (cases == 2 && (i==winI && j==winJ || (j==winJ+1&&i==winI-1) || (j==winJ+2&&i==winI-2) || (j==winJ+3&&i==winI-3))) ||
+								 (cases == 3 && (i==winI && j==winJ || (j==winJ+1&&i==winI+1) || (j==winJ+2&&i==winI+2) || (j==winJ+3&&i==winI+3) ))) {
+								img = t.getImage("red.gif");	
+							}
+						}
+						else img = t.getImage("red.png");	
+					}
+					if (temp == 2) {
 						g2D.setColor(Color.BLUE);
+						if (win == 2 ) {
+							if ( (cases == 0 && (i==winI && j==winJ || j==winJ+1 || j==winJ+2 || j==winJ+3 )) || 
+								 (cases == 1 && (i==winI && j==winJ || i==winI+1 || i==winI+2 || i==winI+3 )) ||
+								 (cases == 2 && (i==winI && j==winJ || (j==winJ+1&&i==winI-1) || (j==winJ+2&&i==winI-2) || (j==winJ+3&&i==winI-3))) ||
+								 (cases == 3 && (i==winI && j==winJ || (j==winJ+1&&i==winI+1) || (j==winJ+2&&i==winI+2) || (j==winJ+3&&i==winI+3) ))) {
+								img = t.getImage("blue.gif");	
+							}	
+						}	
+						else img = t.getImage("blue.png");	
+					}
 					g2D.fill(new Rectangle2D.Double(spacing+j*size, spacing+(i+1)*size, size-2*spacing, size-2*spacing));
+					if(temp==1) g2D.drawImage(img, j*size, (i+1)*size, this);
+					else if(temp==2) g2D.drawImage(img, 2*spacing+j*size, 2*spacing+(i+1)*size, this);
+					
 				}
 			}
 		}
@@ -107,38 +133,50 @@ public class GUI extends JFrame{
 	
 	public int checkWin() {
 		
-		// _ horizontal
+		// _ horizontal case 0
 		for (int i=h-1;i>=0;i--) {
 			for (int j=0;j<1+w-connect;j++) {
 				int value = state[i][j];
 				if (value!=0&&state[i][j+1]==value&&state[i][j+2]==value&&state[i][j+3]==value) {
+					winI=i;
+					winJ=j;
+					cases = 0;
 					return value;
 				}
 			}
 		}
-		// | vertical
+		// | vertical case 1
 		for (int j=w-1;j>=0;j--) {
 			for (int i=0;i<1+h-connect;i++) {
 				int value = state[i][j];
 				if (value!=0&&state[i+1][j]==value&&state[i+2][j]==value&&state[i+3][j]==value) {
+					winI=i;
+					winJ=j;
+					cases = 1;
 					return value;
 				}
 			}
 		}
-		// / diagonal 
+		// / diagonal case 2
 		for (int i=connect-1;i<h;i++) {
 			for (int j=0;j<1+w-connect;j++) {
 				int value = state[i][j];
 				if (value!=0&&state[i-1][j+1]==value&&state[i-2][j+2]==value&&state[i-3][j+3]==value) {
+					winI=i;
+					winJ=j;
+					cases = 2;
 					return value;
 				}
 			}
 		}
-		// \ diagonal a
+		// \ diagonal case 3
 		for (int i=0;i<connect-1;i++) {
 			for (int j=0;j<1+w-connect;j++) {
 				int value = state[i][j];
 				if (value!=0&&state[i+1][j+1]==value&&state[i+2][j+2]==value&&state[i+3][j+3]==value) {
+					winI=i;
+					winJ=j;
+					cases = 3;
 					return value;
 				}
 			}
@@ -244,15 +282,15 @@ public class GUI extends JFrame{
 		public void mousePressed(MouseEvent e) {
 			int ii = inBoxY(), jj = inBoxX();
 			if(ii!=-1 && jj!=-1 && state[0][jj]==0&&win==0) {
-				if (turn == 1) {
+				//if (turn == 1) {
 					ii=-1; // start falling
 					ii = falldown(ii, jj);
 					state[ii][jj] = turn;
 					//repaint();
-				}
-				else {
-					computer();
-				}
+				//}
+				//else {
+				//	computer();
+				//}
 				turn = 1 + (turn++)%2;
 				win = checkWin();
 				System.out.println(win);
