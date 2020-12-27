@@ -1,4 +1,3 @@
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -11,18 +10,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.geom.Arc2D;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Random;
-import java.util.Vector;
-
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
@@ -38,7 +27,7 @@ public class GUI extends JFrame{
 	int turn = 1, win =0, winI = -1, winJ = -1, cases = -1;
 	int connect = 4;
 	Toolkit t=Toolkit.getDefaultToolkit();
-	Image img;
+	Image imgR = null, imgB = null;
 	
 	public GUI() {
 		this.setTitle("CONNECT 4");
@@ -54,6 +43,8 @@ public class GUI extends JFrame{
 		this.addMouseMotionListener(move);
 		Click click = new Click();
 		this.addMouseListener(click);
+		this.addKeyListener(move);
+		this.setFocusable(true);
 		
 		for(int i=0;i<h;i++)
 			for(int j=0;j<w;j++)
@@ -73,38 +64,60 @@ public class GUI extends JFrame{
 	    	g2D.setRenderingHints(rh);
 			for(int i=0;i<h;i++) {
 				for(int j=0;j<w;j++) {
+					
+					//turn
+					if (turn ==1) {
+						g2D.setColor(Color.RED);
+						g2D.setFont(new Font("Monospaced", Font.BOLD, 30));
+						g2D.drawString("RED'S TURN",width-220,100);
+					}
+					else if (turn ==2) {
+						g2D.setColor(Color.BLUE);
+						g2D.setFont(new Font("Monospaced", Font.BOLD, 30));
+						g2D.drawString("BLUE'S TURN",width-220,100);
+					}
+					
 					int temp = state[i][j];
+					// cells
 					if (temp== 0)
 						g2D.setColor(Color.WHITE);
+					// mouse
 					if(inBoxX()==j) 
 						g2D.setColor(Color.DARK_GRAY);
+					//red cell
 					if (temp == 1) {
 						g2D.setColor(Color.RED);
-						if (win == 1) {
-							if ( (cases == 0 && (i==winI && j==winJ || j==winJ+1 || j==winJ+2 || j==winJ+3 )) || 
-								 (cases == 1 && (i==winI && j==winJ || i==winI+1 || i==winI+2 || i==winI+3 )) ||
-								 (cases == 2 && (i==winI && j==winJ || (j==winJ+1&&i==winI-1) || (j==winJ+2&&i==winI-2) || (j==winJ+3&&i==winI-3))) ||
-								 (cases == 3 && (i==winI && j==winJ || (j==winJ+1&&i==winI+1) || (j==winJ+2&&i==winI+2) || (j==winJ+3&&i==winI+3) ))) {
-								img = t.getImage("red.gif");	
-							}
-						}
-						else img = t.getImage("red.png");	
+						imgR = t.getImage("red.png");
 					}
+					// blue cell
 					if (temp == 2) {
 						g2D.setColor(Color.BLUE);
-						if (win == 2 ) {
-							if ( (cases == 0 && (i==winI && j==winJ || j==winJ+1 || j==winJ+2 || j==winJ+3 )) || 
-								 (cases == 1 && (i==winI && j==winJ || i==winI+1 || i==winI+2 || i==winI+3 )) ||
-								 (cases == 2 && (i==winI && j==winJ || (j==winJ+1&&i==winI-1) || (j==winJ+2&&i==winI-2) || (j==winJ+3&&i==winI-3))) ||
-								 (cases == 3 && (i==winI && j==winJ || (j==winJ+1&&i==winI+1) || (j==winJ+2&&i==winI+2) || (j==winJ+3&&i==winI+3) ))) {
-								img = t.getImage("blue.gif");	
-							}	
-						}	
-						else img = t.getImage("blue.png");	
+						imgB = t.getImage("blue.png");
 					}
+					// won
+					if ( 	 (cases == 0 && (i==winI && (j==winJ || j==winJ+1 || j==winJ+2 || j==winJ+3 ))) || 
+							 (cases == 1 && (j==winJ && (i==winI || i==winI+1 || i==winI+2 || i==winI+3 ))) ||
+							 (cases == 2 && ((i==winI && j==winJ) || (j==winJ+1&&i==winI-1) || (j==winJ+2&&i==winI-2) || (j==winJ+3&&i==winI-3))) ||
+							 (cases == 3 && ((i==winI && j==winJ) || (j==winJ+1&&i==winI+1) || (j==winJ+2&&i==winI+2) || (j==winJ+3&&i==winI+3))))   {
+							if (win == 1) imgR = t.getImage("red.gif");	
+							else if (win == 2 ) imgB = t.getImage("blue.gif");
+							g2D.setColor(Color.GREEN);
+						}
+					// fill
 					g2D.fill(new Rectangle2D.Double(spacing+j*size, spacing+(i+1)*size, size-2*spacing, size-2*spacing));
-					if(temp==1) g2D.drawImage(img, j*size, (i+1)*size, this);
-					else if(temp==2) g2D.drawImage(img, 2*spacing+j*size, 2*spacing+(i+1)*size, this);
+					if(temp==1) g2D.drawImage(imgR, j*size, (i+1)*size, this);
+					else if(temp==2) g2D.drawImage(imgB, 2*spacing+j*size, 2*spacing+(i+1)*size, this);
+					// WINNER DISPLAY
+					if (win ==1) {
+						g2D.setColor(Color.RED);
+						g2D.setFont(new Font("Monospaced", Font.BOLD, 60));
+						g2D.drawString("RED WON!",20,70);
+					}
+					else if(win ==2) {
+						g2D.setColor(Color.BLUE);
+						g2D.setFont(new Font("Monospaced", Font.BOLD, 60));
+						g2D.drawString("BLUE WON!",20,70);
+					}
 					
 				}
 			}
@@ -194,7 +207,7 @@ public class GUI extends JFrame{
 		return 0;
 	}
 	
-	public class Move implements MouseMotionListener{
+	public class Move implements MouseMotionListener, KeyListener{
 		@Override
 		public void mouseDragged(MouseEvent e) {
 			
@@ -203,6 +216,24 @@ public class GUI extends JFrame{
 		public void mouseMoved(MouseEvent e) {
 			mx = e.getX();
 			my = e.getY();
+		}
+		@Override
+		public void keyPressed(KeyEvent e) {
+			if (e.getKeyCode()==KeyEvent.VK_SPACE){
+				// RESET
+				reset();
+			}
+			
+		}
+		@Override
+		public void keyReleased(KeyEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+		@Override
+		public void keyTyped(KeyEvent e) {
+			// TODO Auto-generated method stub
+			
 		}
 	}
 	
@@ -262,6 +293,20 @@ public class GUI extends JFrame{
 		
 	}
 	
+	public void reset() {
+		turn = 1;
+		win =0;
+		winI = -1;
+		winJ = -1;
+		cases = -1;
+		connect = 4;
+		imgR = null;
+		imgB = null;
+		for(int i=0;i<h;i++)
+			for(int j=0;j<w;j++)
+				state[i][j]= 0;
+	}
+	
 	int falldown(int i, int j) {
 		while(i+1<h&&state[i+1][j]==0) i++;
 		return i;
@@ -293,8 +338,8 @@ public class GUI extends JFrame{
 				//}
 				turn = 1 + (turn++)%2;
 				win = checkWin();
-				System.out.println(win);
-				//repaint();
+				//System.out.println(win);
+				repaint();
 			}
 		}
 		@Override
