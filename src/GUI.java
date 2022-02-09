@@ -1,5 +1,6 @@
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -20,18 +21,18 @@ public class GUI extends JFrame{
 	
 	static int spacing = 5;
 	static int width = 770, height = 770;
-	static int h = 6, w = 7;
-	static int size = width/Math.max(h, w);
+	static int h = 3, w = 3;
+	static int size = width/(Math.max(h, w)+1);
 	static int state[][] = new int [h][w];
 	public double mx,my;
 	int turn = 1, win =0, winI = -1, winJ = -1, cases = -1;
-	int connect = 4;
+	int connect = 3;
 	Toolkit t=Toolkit.getDefaultToolkit();
 	Image imgR = null, imgB = null;
-	
+	static int guiW = size*w+spacing, guiH = size*(h+1)+26+spacing;
 	public GUI() {
 		this.setTitle("CONNECT 4");
-		this.setSize(770+6+6+spacing,770+29+6+spacing); 
+		this.setSize(guiW,guiH); 
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setBackground(Color.BLACK);
 		this.setVisible(true);
@@ -64,17 +65,17 @@ public class GUI extends JFrame{
 	    	g2D.setRenderingHints(rh);
 			for(int i=0;i<h;i++) {
 				for(int j=0;j<w;j++) {
-					
 					//turn
-					if (turn ==1) {
+					//System.out.println(win);
+					if (turn ==1 && win==0) {
 						g2D.setColor(Color.RED);
 						g2D.setFont(new Font("Monospaced", Font.BOLD, 30));
-						g2D.drawString("RED'S TURN",width-220,100);
+						g2D.drawString("RED'S TURN",spacing,100);
 					}
-					else if (turn ==2) {
+					else if (turn ==2 && win==0) {
 						g2D.setColor(Color.BLUE);
 						g2D.setFont(new Font("Monospaced", Font.BOLD, 30));
-						g2D.drawString("BLUE'S TURN",width-220,100);
+						g2D.drawString("BLUE'S TURN",spacing,100);
 					}
 					
 					int temp = state[i][j];
@@ -118,7 +119,11 @@ public class GUI extends JFrame{
 						g2D.setFont(new Font("Monospaced", Font.BOLD, 60));
 						g2D.drawString("BLUE WON!",20,70);
 					}
-					
+					else if(win ==3) {
+						g2D.setColor(Color.WHITE);
+						g2D.setFont(new Font("Monospaced", Font.BOLD, 60));
+						g2D.drawString("GAME DRAW!",20,70);
+					}
 				}
 			}
 		}
@@ -150,11 +155,17 @@ public class GUI extends JFrame{
 		for (int i=h-1;i>=0;i--) {
 			for (int j=0;j<1+w-connect;j++) {
 				int value = state[i][j];
-				if (value!=0&&state[i][j+1]==value&&state[i][j+2]==value&&state[i][j+3]==value) {
-					winI=i;
-					winJ=j;
-					cases = 0;
-					return value;
+				if (value!=0) {
+					int cnt = 1;
+					for(int check = 1; check < connect; check++) {
+						if(state[i][j+check]==value) cnt++;
+					}
+					if(cnt==connect) {
+						winI=i;
+						winJ=j;
+						cases = 0;
+						return value;
+					}
 				}
 			}
 		}
@@ -162,11 +173,18 @@ public class GUI extends JFrame{
 		for (int j=w-1;j>=0;j--) {
 			for (int i=0;i<1+h-connect;i++) {
 				int value = state[i][j];
-				if (value!=0&&state[i+1][j]==value&&state[i+2][j]==value&&state[i+3][j]==value) {
-					winI=i;
-					winJ=j;
-					cases = 1;
-					return value;
+				if (value!=0) {
+					int cnt = 1;
+					for(int check = 1; check < connect; check++) {
+						if(state[i+check][j]==value) cnt++;
+					}
+					System.out.println("cnt: "+cnt);
+					if(cnt==connect) {
+						winI=i;
+						winJ=j;
+						cases = 1;
+						return value;
+					}
 				}
 			}
 		}
@@ -174,23 +192,35 @@ public class GUI extends JFrame{
 		for (int i=connect-1;i<h;i++) {
 			for (int j=0;j<1+w-connect;j++) {
 				int value = state[i][j];
-				if (value!=0&&state[i-1][j+1]==value&&state[i-2][j+2]==value&&state[i-3][j+3]==value) {
-					winI=i;
-					winJ=j;
-					cases = 2;
-					return value;
+				if (value!=0) {
+					int cnt = 1;
+					for(int check = 1; check < connect; check++) {
+						if(state[i-check][j+check]==value) cnt++;
+					}
+					if(cnt==connect) {
+						winI=i;
+						winJ=j;
+						cases = 2;
+						return value;
+					}
 				}
 			}
 		}
 		// \ diagonal case 3
-		for (int i=0;i<connect-1;i++) {
+		for (int i=0;i<1+h-connect;i++) {
 			for (int j=0;j<1+w-connect;j++) {
 				int value = state[i][j];
-				if (value!=0&&state[i+1][j+1]==value&&state[i+2][j+2]==value&&state[i+3][j+3]==value) {
-					winI=i;
-					winJ=j;
-					cases = 3;
-					return value;
+				if (value!=0) {
+					int cnt = 1;
+					for(int check = 1; check < connect; check++) {
+						if(state[i+check][j+check]==value) cnt++;
+					}
+					if(cnt==connect) {
+						winI=i;
+						winJ=j;
+						cases = 3;
+						return value;
+					}
 				}
 			}
 		}
@@ -201,7 +231,8 @@ public class GUI extends JFrame{
 				if (state[i][j]==0) count++;
 			}
 		}
-		if (count == h*w) return 3;
+		//System.out.println(count);
+		if (count == 0) return 3;
 		
 		// continue game
 		return 0;
@@ -239,7 +270,7 @@ public class GUI extends JFrame{
 	
 	private void computer() {
 		int moveI=-1,moveJ=-1,score=-99999999;
-		int tempJ = (new Random()).nextInt(6);
+		int tempJ = (new Random()).nextInt(w);
 		for(int j=tempJ,cnti=0;cnti<w;j++,j%=w,cnti++) {
 			int i = falldown(-1, j);
 			if (i!=-1) {
@@ -250,8 +281,9 @@ public class GUI extends JFrame{
 					moveI=i;
 					moveJ=j;
 				}
+				state[i][j]=0;
 			}
-			state[i][j]=0;
+			else continue;
 		}	
 		state[moveI][moveJ]=2;
 		return;
@@ -259,8 +291,10 @@ public class GUI extends JFrame{
 	
 	private int minimax(boolean isMax) {
 		//terminating
-		if(checkWin()==2) return 1;
-		else if (checkWin()==1) return -1;
+		int ii = checkWin();
+		if(ii==2) return 1;
+		else if (ii==1) return -1;
+		else if (ii==3) return 0;
 		
 		if(isMax) {
 			int best = -9999999;
@@ -272,7 +306,7 @@ public class GUI extends JFrame{
 					best = Math.max(best,temp);
 					state[i][j]=0;
 				}
-				
+				else continue;
 			}
 			return best;
 		}
@@ -286,7 +320,7 @@ public class GUI extends JFrame{
 					best = Math.min(best,temp);
 					state[i][j]=0;
 				}
-
+				else continue;
 			}	
 			return best;
 		}
@@ -327,20 +361,29 @@ public class GUI extends JFrame{
 		public void mousePressed(MouseEvent e) {
 			int ii = inBoxY(), jj = inBoxX();
 			if(ii!=-1 && jj!=-1 && state[0][jj]==0&&win==0) {
-				//if (turn == 1) {
+				if (turn == 1) {
 					ii=-1; // start falling
 					ii = falldown(ii, jj);
 					state[ii][jj] = turn;
 					//repaint();
-				//}
-				//else {
-				//	computer();
-				//}
-				turn = 1 + (turn++)%2;
-				win = checkWin();
+				}
 				//System.out.println(win);
-				repaint();
+				//repaint();
 			}
+			if (turn !=1) {
+				computer();
+			}
+			turn = 1 + (turn++)%2;
+			win = checkWin();
+			System.out.println(win);
+			System.out.flush();
+			for(int i=0;i<h;i++) {
+				for(int j=0;j<w;j++) {
+					System.out.print(state[i][j]);
+				}
+				System.out.println();
+			}
+			repaint();
 		}
 		@Override
 		public void mouseReleased(MouseEvent e) {
